@@ -66,3 +66,27 @@ quiz();
 // RSVP via WhatsApp
 $('#rsvp').onsubmit=e=>{e.preventDefault();const t=`Assalamu'alaikum, saya ${$('#guestName').textContent}.\nKehadiran: ${$('#rsvpAtt').value} (${$('#rsvpN').value} orang)\nUcapan: ${$('#rsvpMsg').value}`;open(`https://wa.me/${WA_NUMBER}?text=`+encodeURIComponent(t),'_blank')};
 $$('.copy').forEach(b=>b.onclick=()=>navigator.clipboard.writeText(b.dataset.c).then(()=>toast('Nomor disalin ✔')));
+
+// Merpati terbang dengan lintasan acak
+(function doves(){
+  const box=document.getElementById('doves');if(!box||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  const R=(a,b)=>a+Math.random()*(b-a);
+  function fly(el){
+    const W=innerWidth,H=innerHeight,s=parseFloat(el.style.width);
+    // pilih sisi masuk & keluar acak (kiri/kanan/atas/bawah)
+    const edge=()=>{const e=Math.floor(R(0,4));return e===0?[-s-20,R(0,H)]:e===1?[W+20,R(0,H)]:e===2?[R(0,W),-s-20]:[R(0,W),H+20]};
+    let a=edge(),b=edge();while(Math.hypot(b[0]-a[0],b[1]-a[1])<W*.6)b=edge();
+    const dir=b[0]>=a[0]?1:-1,n=4,pts=[a];
+    for(let i=1;i<n;i++){const t=i/n;pts.push([a[0]+(b[0]-a[0])*t+R(-W*.15,W*.15),a[1]+(b[1]-a[1])*t+R(-H*.15,H*.15)])}
+    pts.push(b);
+    const frames=pts.map((p,i)=>{const q=pts[Math.min(i+1,n)],o=pts[Math.max(i-1,0)];
+      let ang=Math.atan2(q[1]-o[1],(q[0]-o[0])*dir)*180/Math.PI;ang=Math.max(-35,Math.min(35,ang));
+      return{transform:`translate(${p[0]}px,${p[1]}px) scaleX(${dir}) rotate(${ang}deg)`}});
+    const dist=Math.hypot(b[0]-a[0],b[1]-a[1]);
+    const anim=el.animate(frames,{duration:dist/R(40,80)*1000,easing:'linear',fill:'forwards'});
+    anim.onfinish=()=>setTimeout(()=>fly(el),R(500,4000));
+  }
+  const N=innerWidth<600?6:10;
+  for(let i=0;i<N;i++){const el=document.createElement('img');el.src='/dove.svg';el.alt='';el.className='fly';el.style.width=R(40,80)+'px';
+    el.style.transform='translate(-200px,-200px)';box.append(el);setTimeout(()=>fly(el),R(0,8000))}
+})();
