@@ -221,43 +221,56 @@ function petalRain(){if(petalRain.on||matchMedia('(prefers-reduced-motion:reduce
     if(sy!==target)requestAnimationFrame(frame);else running=false;
   }
   function kick(){if(!running){running=true;requestAnimationFrame(frame)}}
-  // ---- paksa snap per section: setiap geser/scroll langsung pindah ke section berikutnya/sebelumnya ----
-  let stops=[],busyNav=false,lastNav=0;
-  function buildStops(){
-    const vh=innerHeight,max=document.documentElement.scrollHeight-vh;stops=[];
-    for(const[t,h]of tops){
-      if(h<=vh*.92)stops.push(t+h/2-vh/2);                      // muat satu layar: tengah-kan
-      else{const st=t-vh*.06,en=t+h-vh*.94;for(let p=st;p<en;p+=vh*.8)stops.push(p);stops.push(en)}
-    }
-    stops=stops.map(v=>clamp(Math.round(v),0,max)).sort((x,y)=>x-y).filter((v,i,a)=>!i||v-a[i-1]>8);
+  // ---- snap per section yang dinamis ----
+  // section pendek: sekali geser langsung pindah. section panjang: bebas di-scroll di dalamnya,
+  // baru pindah (snap) setelah mentok di ujung dan tamu masih menggeser ke arah yang sama.
+  let segs=[],busyNav=false,lastNav=0,idleT=0;
+  function buildSegs(){
+    const vh=innerHeight,max=document.documentElement.scrollHeight-vh;
+    segs=tops.map(([t,h])=>{let a,b;if(h<=vh*.92){a=b=t+h/2-vh/2}else{a=t-vh*.06;b=t+h-vh*.94}
+      return{a:clamp(Math.round(a),0,max),b:clamp(Math.round(b),0,max),tall:h>vh*.92}});
   }
-  const nearest=()=>{let bi=0,bd=1e9;stops.forEach((v,i)=>{const d=Math.abs(v-scrollY);if(d<bd){bd=d;bi=i}});return bi};
+  const segAt=y=>segs.findIndex(s=>y>=s.a-4&&y<=s.b+4);
   const easeIO=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
-  function goTo(i){
-    if(!stops.length)return;i=clamp(i,0,stops.length-1);const from=scrollY,to=stops[i];
-    busyNav=true;lastNav=performance.now();if(Math.abs(to-from)<2){busyNav=false;return}
+  function glide(to){
+    const from=scrollY;busyNav=true;lastNav=performance.now();
+    if(Math.abs(to-from)<2){busyNav=false;return}
     const html=document.documentElement,prev=html.style.scrollBehavior;html.style.scrollBehavior='auto';
-    const dur=mobile?750:900,t0=performance.now();
+    const dur=Math.min(mobile?750:900,300+Math.abs(to-from)*.9),t0=performance.now();
     (function step(now){const k=clamp((now-t0)/dur,0,1);scrollTo(0,from+(to-from)*easeIO(k));
       if(k<1)requestAnimationFrame(step);else{html.style.scrollBehavior=prev;lastNav=performance.now();setTimeout(()=>busyNav=false,120)}})(t0);
   }
-  const go=dir=>{if(busyNav||document.body.classList.contains('locked'))return;
-    let i=nearest();const cur=stops[i];
-    if(dir>0&&cur<scrollY-4)i++;else if(dir<0&&cur>scrollY+4)i--; // sedang di antara: ambil arah gerakan
-    else i+=dir;goTo(i)};
-  const skip=e=>!reduce&&e.target.closest&&e.target.closest('#scratchCv,textarea,select,input');
+  // apakah gerakan ini boleh di-scroll bebas (masih di dalam section panjang, belum mentok)?
+  const free=dir=>{const i=segAt(scrollY);if(i<0||!segs[i].tall)return false;const s=segs[i];return dir>0?scrollY<s.b-2:scrollY>s.a+2};
+  function go(dir){
+    if(busyNav||!segs.length||document.body.classList.contains('locked'))return;
+    const y=scrollY;let i=segAt(y);
+    if(i<0){let nx=segs.findIndex(s=>s.a>y);if(nx<0)nx=segs.length;i=dir>0?nx-1:nx}  // sedang di celah antar section
+    const n=clamp(i+dir,0,segs.length-1),t=segs[n];glide(dir>0?t.a:t.b);
+  }
+  // kalau berhenti di celah antar section (mis. sisa momentum), luncur ke section terdekat
+  function settle(){if(busyNav||document.body.classList.contains('locked')||segAt(scrollY)>=0)return;
+    let best=0,bd=1e9;for(const s of segs)for(const v of[s.a,s.b]){const d=Math.abs(v-scrollY);if(d<bd){bd=d;best=v}}glide(best)}
+  const skip=e=>e.target.closest&&e.target.closest('#scratchCv,textarea,select,input');
   if(!reduce){
-    addEventListener('wheel',e=>{if(skip(e)||document.body.classList.contains('locked'))return;e.preventDefault();
-      if(busyNav||performance.now()-lastNav<500||Math.abs(e.deltaY)<6)return;go(Math.sign(e.deltaY))},{passive:false});
-    let ty=null,fired=false;
-    addEventListener('touchstart',e=>{ty=e.touches[0].clientY;fired=false},{passive:true});
-    addEventListener('touchmove',e=>{if(skip(e)||ty===null||document.body.classList.contains('locked'))return;e.preventDefault();
-      const dy=ty-e.touches[0].clientY;if(!fired&&Math.abs(dy)>40){fired=true;go(Math.sign(dy))}},{passive:false});
+    addEventListener('wheel',e=>{if(skip(e)||document.body.classList.contains('locked'))return;
+      const dir=Math.sign(e.deltaY);if(!dir)return;
+      if(!busyNav&&free(dir))return;                                   // scroll bebas di section panjang
+      e.preventDefault();if(busyNav||performance.now()-lastNav<450||Math.abs(e.deltaY)<6)return;go(dir)},{passive:false});
+    let ty=null,fired=false,startFree=null;
+    addEventListener('touchstart',e=>{ty=e.touches[0].clientY;fired=false;startFree=null;clearTimeout(idleT)},{passive:true});
+    addEventListener('touchmove',e=>{if(skip(e)||ty===null||document.body.classList.contains('locked'))return;
+      const dy=ty-e.touches[0].clientY,dir=Math.sign(dy);if(!dir)return;
+      if(startFree===null)startFree=free(dir);
+      if(startFree&&!busyNav&&free(dir))return;                        // biarkan jari menggulir bebas
+      e.preventDefault();if(!fired&&Math.abs(dy)>40){fired=true;go(dir)}},{passive:false});
     addEventListener('touchend',()=>{ty=null},{passive:true});
+    addEventListener('scroll',()=>{clearTimeout(idleT);if(!busyNav&&ty===null)idleT=setTimeout(settle,mobile?260:180)},{passive:true});
     addEventListener('keydown',e=>{const k={ArrowDown:1,PageDown:1,' ':1,ArrowUp:-1,PageUp:-1}[e.key];
-      if(k&&!skip(e)){e.preventDefault();go(k)}});
-    const rebuild=()=>{measure();buildStops()};
-    addEventListener('resize',()=>{rebuild();if(!busyNav)goTo(nearest())});addEventListener('load',rebuild);setTimeout(rebuild,1600);rebuild();
+      if(k&&!skip(e)){if(free(k)&&(e.key==='ArrowDown'||e.key==='ArrowUp'))return;e.preventDefault();
+        if(free(k)){const sgm=segs[segAt(scrollY)];glide(clamp(scrollY+k*innerHeight*.8,sgm.a,sgm.b))}else go(k)}});
+    const rebuild=()=>{measure();buildSegs()};
+    addEventListener('resize',rebuild);addEventListener('load',rebuild);setTimeout(rebuild,1600);rebuild();
   }
   addEventListener('scroll',kick,{passive:true});
   addEventListener('resize',()=>{measure();kick()});
