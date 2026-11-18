@@ -221,6 +221,44 @@ function petalRain(){if(petalRain.on||matchMedia('(prefers-reduced-motion:reduce
     if(sy!==target)requestAnimationFrame(frame);else running=false;
   }
   function kick(){if(!running){running=true;requestAnimationFrame(frame)}}
+  // ---- paksa snap per section: setiap geser/scroll langsung pindah ke section berikutnya/sebelumnya ----
+  let stops=[],busyNav=false,lastNav=0;
+  function buildStops(){
+    const vh=innerHeight,max=document.documentElement.scrollHeight-vh;stops=[];
+    for(const[t,h]of tops){
+      if(h<=vh*.92)stops.push(t+h/2-vh/2);                      // muat satu layar: tengah-kan
+      else{const st=t-vh*.06,en=t+h-vh*.94;for(let p=st;p<en;p+=vh*.8)stops.push(p);stops.push(en)}
+    }
+    stops=stops.map(v=>clamp(Math.round(v),0,max)).sort((x,y)=>x-y).filter((v,i,a)=>!i||v-a[i-1]>8);
+  }
+  const nearest=()=>{let bi=0,bd=1e9;stops.forEach((v,i)=>{const d=Math.abs(v-scrollY);if(d<bd){bd=d;bi=i}});return bi};
+  const easeIO=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+  function goTo(i){
+    if(!stops.length)return;i=clamp(i,0,stops.length-1);const from=scrollY,to=stops[i];
+    busyNav=true;lastNav=performance.now();if(Math.abs(to-from)<2){busyNav=false;return}
+    const html=document.documentElement,prev=html.style.scrollBehavior;html.style.scrollBehavior='auto';
+    const dur=mobile?750:900,t0=performance.now();
+    (function step(now){const k=clamp((now-t0)/dur,0,1);scrollTo(0,from+(to-from)*easeIO(k));
+      if(k<1)requestAnimationFrame(step);else{html.style.scrollBehavior=prev;lastNav=performance.now();setTimeout(()=>busyNav=false,120)}})(t0);
+  }
+  const go=dir=>{if(busyNav||document.body.classList.contains('locked'))return;
+    let i=nearest();const cur=stops[i];
+    if(dir>0&&cur<scrollY-4)i++;else if(dir<0&&cur>scrollY+4)i--; // sedang di antara: ambil arah gerakan
+    else i+=dir;goTo(i)};
+  const skip=e=>!reduce&&e.target.closest&&e.target.closest('#scratchCv,textarea,select,input');
+  if(!reduce){
+    addEventListener('wheel',e=>{if(skip(e)||document.body.classList.contains('locked'))return;e.preventDefault();
+      if(busyNav||performance.now()-lastNav<500||Math.abs(e.deltaY)<6)return;go(Math.sign(e.deltaY))},{passive:false});
+    let ty=null,fired=false;
+    addEventListener('touchstart',e=>{ty=e.touches[0].clientY;fired=false},{passive:true});
+    addEventListener('touchmove',e=>{if(skip(e)||ty===null||document.body.classList.contains('locked'))return;e.preventDefault();
+      const dy=ty-e.touches[0].clientY;if(!fired&&Math.abs(dy)>40){fired=true;go(Math.sign(dy))}},{passive:false});
+    addEventListener('touchend',()=>{ty=null},{passive:true});
+    addEventListener('keydown',e=>{const k={ArrowDown:1,PageDown:1,' ':1,ArrowUp:-1,PageUp:-1}[e.key];
+      if(k&&!skip(e)){e.preventDefault();go(k)}});
+    const rebuild=()=>{measure();buildStops()};
+    addEventListener('resize',()=>{rebuild();if(!busyNav)goTo(nearest())});addEventListener('load',rebuild);setTimeout(rebuild,1600);rebuild();
+  }
   addEventListener('scroll',kick,{passive:true});
   addEventListener('resize',()=>{measure();kick()});
   addEventListener('load',()=>{measure();kick()});
