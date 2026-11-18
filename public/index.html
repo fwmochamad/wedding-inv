@@ -1,0 +1,68 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Undangan Pernikahan Fadil & Anisa</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:wght@400;600&family=Amiri&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css"></head><body class="locked">
+<!-- COVER -->
+<section id="cover"><div class="cv-in">
+<p class="small">The Wedding of</p><h1 class="script">Fadil <span>&</span> Anisa</h1>
+<p class="date-s" id="coverDate"></p>
+<div class="to"><p>Kepada Yth. Bapak/Ibu/Saudara/i</p><h3 id="guestName">…</h3><p class="note">Mohon maaf bila ada kesalahan penulisan nama/gelar</p></div>
+<button id="openBtn" class="btn">✉ Buka Undangan</button></div></section>
+
+<main>
+<nav id="hud"><span>💜 Hati terkumpul: <b id="heartCount">0</b>/7</span><span id="badge"></span></nav>
+<button id="musicBtn" title="Musik">♫</button>
+
+<section class="sec hero"><p class="arab">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</p>
+<p class="arab big">وَمِنْ اٰيٰتِهٖٓ اَنْ خَلَقَ لَكُمْ مِّنْ اَنْفُسِكُمْ اَزْوَاجًا لِّتَسْكُنُوْٓا اِلَيْهَا وَجَعَلَ بَيْنَكُمْ مَّوَدَّةً وَّرَحْمَةً</p>
+<p class="tr">“Dan di antara tanda-tanda kebesaran-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tenteram kepadanya, dan Dia menjadikan di antaramu rasa kasih dan sayang.”<br><b>— QS. Ar-Rum: 21</b></p><span class="heart" data-h="1">💜</span></section>
+
+<section class="sec"><p class="arab">السَّلاَمُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ</p>
+<p>Dengan memohon rahmat dan ridho Allah SWT, kami bermaksud menyelenggarakan pernikahan putra-putri kami:</p>
+<div class="couple">
+<div class="person"><div class="ph">F</div><h2 class="script">Mochamad Fadillah Wijaya</h2><p>Putra dari Bapak [Nama Ayah] & Ibu [Nama Ibu]</p></div>
+<div class="amp script">&</div>
+<div class="person"><div class="ph">A</div><h2 class="script">Anisa Kusdwi Wulandari</h2><p>Putri dari Bapak [Nama Ayah] & Ibu [Nama Ibu]</p></div></div><span class="heart" data-h="2">💜</span></section>
+
+<section class="sec dark"><h2 class="title">Menuju Hari Bahagia</h2><div id="countdown"></div>
+<h3 class="mini">🎁 Gosok untuk melihat tanggal</h3>
+<div class="scratch"><div class="under" id="scratchDate"></div><canvas id="scratchCv"></canvas></div>
+<a class="btn light" id="calBtn" target="_blank">📅 Simpan ke Kalender</a></section>
+
+<section class="sec"><h2 class="title">Waktu & Tempat</h2><div class="events">
+<div class="card"><h3>Akad Nikah</h3><p id="dLong1"></p><p>08.00 WIB – Selesai</p></div>
+<div class="card"><h3>Resepsi</h3><p id="dLong2"></p><p>11.00 – 14.00 WIB</p></div></div>
+<p class="loc"><b>Gd. Graha Sativa</b><br>[Alamat lengkap]</p>
+<a class="btn" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Gedung+Graha+Sativa">📍 Buka Google Maps</a><span class="heart" data-h="3">💜</span></section>
+
+<section class="sec"><h2 class="title">Kisah Kami</h2><div class="timeline">
+<div><b>Pertama Bertemu</b><p>[Ceritakan bagaimana kalian bertemu]</p></div>
+<div><b>Mengenal Lebih Dekat</b><p>[Cerita perjalanan]</p></div>
+<div><b>Khitbah</b><p>[Cerita lamaran]</p></div>
+<div><b>Menuju Halal</b><p>Insyaallah kami melangkah ke jenjang pernikahan.</p></div></div><span class="heart" data-h="4">💜</span></section>
+
+<section class="sec soft"><h2 class="title">🎮 Game: Cocokkan Kartu</h2><p>Temukan semua pasangan kartu secepat mungkin!</p>
+<div id="memory"></div><p id="memInfo">Langkah: 0</p><button class="btn" id="memReset">Main Lagi</button></section>
+
+<section class="sec"><h2 class="title">🧠 Kuis: Seberapa Kenal Kamu?</h2><div id="quiz"></div></section>
+
+<section class="sec soft"><h2 class="title">Galeri</h2><div class="gallery">
+<div></div><div></div><div></div><div></div><div></div><div></div></div><p class="note">Ganti dengan foto prewedding di folder /public/img</p><span class="heart" data-h="5">💜</span></section>
+
+<section class="sec"><h2 class="title">Konfirmasi Kehadiran</h2>
+<form id="rsvp"><select id="rsvpAtt"><option>Insyaallah Hadir</option><option>Belum Bisa Hadir</option></select>
+<input id="rsvpN" type="number" min="1" max="5" value="1" placeholder="Jumlah tamu">
+<textarea id="rsvpMsg" placeholder="Ucapan & doa untuk mempelai"></textarea>
+<button class="btn">Kirim via WhatsApp</button></form><span class="heart" data-h="6">💜</span></section>
+
+<section class="sec dark"><h2 class="title">Amplop Digital</h2><p>Doa restu Anda adalah karunia terindah. Namun jika ingin memberi tanda kasih:</p>
+<div class="events"><div class="card"><h3>[Bank]</h3><p class="acc">1234567890</p><p>a.n. [Nama]</p><button class="btn copy" data-c="1234567890">Salin</button></div>
+<div class="card"><h3>[E-Wallet]</h3><p class="acc">08xxxxxxxxxx</p><p>a.n. [Nama]</p><button class="btn copy" data-c="08xxxxxxxxxx">Salin</button></div></div></section>
+
+<section class="sec closing"><p>Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir dan memberikan doa restu.</p>
+<p class="arab">وَالسَّلاَمُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ</p>
+<h2 class="script">Fadil & Anisa</h2><span class="heart" data-h="7">💜</span></section>
+</main>
+<div id="toast"></div>
+<audio id="bgm" loop src="/music.mp3"></audio>
+<script src="/app.js"></script></body></html>
