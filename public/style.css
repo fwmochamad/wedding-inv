@@ -59,3 +59,9 @@ input,select,textarea{font:inherit;padding:.8rem;border-radius:12px;border:1px s
 .closing .script{font-size:3rem}
 .petal{position:fixed;top:-20px;z-index:10;pointer-events:none;color:var(--lilac);animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
+/* Hiasan latar: daun + merpati transparan */
+#deco{position:fixed;inset:0;z-index:5;pointer-events:none;background:url(/deco.svg) center/cover no-repeat;opacity:.18;overflow:hidden}
+.fly{position:absolute;width:60px;left:-80px;animation:fly 22s linear infinite}
+.f1{top:15%}.f2{top:45%;width:44px;animation-duration:28s;animation-delay:-9s}.f3{top:75%;width:52px;animation-duration:25s;animation-delay:-17s}
+@keyframes fly{0%{transform:translate(0,0)}25%{transform:translate(30vw,-20px)}50%{transform:translate(60vw,10px)}75%{transform:translate(90vw,-15px)}100%{transform:translate(calc(100vw + 160px),0)}}
+@media (prefers-reduced-motion:reduce){.fly{animation:none;display:none}}

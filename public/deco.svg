@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <g id="leaf"><path d="M0 0C10-12 30-14 44-6C30 2 10 6 0 0Z" fill="#8a9a6b"/><path d="M0 0L40-6" stroke="#6f7f55" stroke-width=".8" fill="none"/></g>
+    <g id="dove" fill="#fff" stroke="#9b85ad" stroke-width="1.2" stroke-linejoin="round">
+      <path d="M0 20C8 10 22 8 34 12L46 6C50 4 54 6 52 10L46 16C44 26 32 34 16 32L4 40L6 30C2 28 0 24 0 20Z"/>
+      <path d="M18 14C14 2 20-10 34-16C30-4 30 6 34 12Z"/>
+      <path d="M22 14C26 0 40-8 56-8C46 0 40 8 34 14Z"/>
+      <circle cx="47" cy="10" r="1.2" fill="#9b85ad" stroke="none"/>
+    </g>
+    <g id="branch">
+      <path d="M0 0C40 30 80 50 140 60" stroke="#6f7f55" stroke-width="2" fill="none"/>
+      <use href="#leaf" transform="translate(20 14) rotate(-40)"/><use href="#leaf" transform="translate(30 20) rotate(60)"/>
+      <use href="#leaf" transform="translate(55 32) rotate(-30)"/><use href="#leaf" transform="translate(68 38) rotate(70)"/>
+      <use href="#leaf" transform="translate(95 48) rotate(-20)"/><use href="#leaf" transform="translate(108 52) rotate(75)"/>
+    </g>
+  </defs>
+  <use href="#branch" transform="translate(-10 -10)"/>
+  <use href="#branch" transform="translate(410 810) rotate(180)"/>
+  <use href="#branch" transform="translate(410 120) scale(-1 1) rotate(10)"/>
+  <use href="#branch" transform="translate(-10 690) rotate(-15)"/>
+  <use href="#dove" transform="translate(300 40) scale(1.3)"/>
+  <use href="#dove" transform="translate(20 380) scale(-.9 .9) translate(-60 0)"/>
+  <use href="#dove" transform="translate(320 560) scale(1.1)"/>
+</svg>

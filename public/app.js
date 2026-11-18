@@ -1,5 +1,5 @@
 // ====== KONFIGURASI ======
-const WEDDING = new Date('2026-02-07T08:00:00+07:00'); // ganti bila tanggal berubah
+const WEDDING = new Date('2027-02-07T08:00:00+07:00'); // ganti bila tanggal berubah
 const WA_NUMBER = '628xxxxxxxxxx'; // nomor WhatsApp penerima RSVP
 const QUIZ = [
   {q:'Di mana Fadil & Anisa pertama kali bertemu?',o:['Kampus','Kantor','Acara keluarga','Online'],a:0},
