@@ -128,3 +128,40 @@ function petalRain(){if(petalRain.on||matchMedia('(prefers-reduced-motion:reduce
     document.body.append(p);setTimeout(()=>p.remove(),d*1000+500)}
     setTimeout(drop,innerWidth<600?900:600)};
   drop()}
+
+// Efek kamera masuk ke taman: latar zoom-in bertingkat, gapura daun lewat, section muncul dari kejauhan
+(function garden(){
+  const g=document.getElementById('garden');if(!g||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  document.body.classList.add('zoomfx');
+  const far=g.querySelector('.far'),mid=g.querySelector('.mid'),near=[...g.querySelectorAll('.near')],main=document.querySelector('main');
+  const secs=[...document.querySelectorAll('main .sec')];let tops=[],busy=false,sy=scrollY;
+  const measure=()=>{tops=secs.map(s=>[main.offsetTop+s.offsetTop,s.offsetHeight])};
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),ease=t=>t*t*(3-2*t);
+  function update(){
+    // inersia: posisi kamera mengejar posisi scroll secara halus
+    sy+=(scrollY-sy)*.14;if(Math.abs(scrollY-sy)<.3)sy=scrollY;
+    const y=sy,H=innerHeight,max=Math.max(1,document.documentElement.scrollHeight-H),gp=y/max;
+    far.style.transform=`scale(${1+gp*.9})`;
+    mid.style.transform=`translateY(${gp*8}%) scale(${1.05+gp*1.8})`;
+    // dua lapis gapura daun bergantian lewat setiap 1 layar scroll
+    near.forEach((n,i)=>{const f=((y/H)*.8+i*.5)%1;
+      n.style.transform=`scale(${.85+ease(f)*2.4})`;
+      n.style.opacity=(f<.2?f/.2:f>.65?Math.max(0,(1-f)/.35):1)*.95});
+    secs.forEach((s,i)=>{const[t,h]=tops[i],top=t-y,bot=top+h;
+      if(bot<-H||top>H*2)return;
+      const e=top>H*.25?clamp((top-H*.25)/(H*.75),0,1):0;          // masih di depan (datang)
+      const l=bot<H*.75?clamp((H*.75-bot)/(H*.75),0,1):0;          // sudah dilewati
+      const sc=1-ease(e)*.22+ease(l)*.28,op=clamp(1-e*1.15-l*1.5,0,1),bl=Math.min(4,(e+l)*5);
+      s.style.transformOrigin=`50% ${H/2-top}px`;
+      s.style.transform=`scale(${sc.toFixed(4)})`;s.style.opacity=op.toFixed(3);
+      s.style.filter=bl>.3?`blur(${bl.toFixed(1)}px)`:'';
+    });
+    if(sy!==scrollY)requestAnimationFrame(update);else busy=false;
+  }
+  const req=()=>{if(!busy){busy=true;requestAnimationFrame(update)}};
+  measure();update();
+  addEventListener('scroll',req,{passive:true});
+  addEventListener('resize',()=>{measure();req()});
+  addEventListener('load',()=>{measure();req()});
+  setTimeout(()=>{measure();req()},1500);
+})();

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f0f8"/><stop offset=".55" stop-color="#f3efe6"/><stop offset="1" stop-color="#e4eadb"/></linearGradient>
+    <radialGradient id="sun" cx=".5" cy=".38" r=".35"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <g id="tree"><ellipse cx="0" cy="-30" rx="34" ry="40" fill="#b9c8a6"/><ellipse cx="-14" cy="-42" rx="20" ry="22" fill="#c9d6b8"/><rect x="-3" y="4" width="6" height="22" fill="#a99a88"/></g>
+  </defs>
+  <rect width="800" height="1000" fill="url(#sky)"/>
+  <rect width="800" height="1000" fill="url(#sun)"/>
+  <path d="M0 600C120 540 240 560 360 590C480 620 620 540 800 570V1000H0Z" fill="#d6e0c8"/>
+  <path d="M0 660C160 620 300 650 420 670C560 690 680 630 800 650V1000H0Z" fill="#c7d4b6"/>
+  <use href="#tree" transform="translate(120 600) scale(1.1)"/><use href="#tree" transform="translate(200 610) scale(.8)"/>
+  <use href="#tree" transform="translate(640 590) scale(1.2)"/><use href="#tree" transform="translate(720 610) scale(.85)"/>
+  <!-- gapura taman di kejauhan -->
+  <g transform="translate(400 640)" fill="none" stroke="#a48fb8" stroke-width="6">
+    <path d="M-70 40V-40A70 70 0 0 1 70-40V40"/>
+    <g fill="#d9c6ea" stroke="none"><circle cx="-70" cy="-30" r="9"/><circle cx="-60" cy="-70" r="10"/><circle cx="-30" cy="-102" r="9"/><circle cx="0" cy="-112" r="11"/><circle cx="30" cy="-102" r="9"/><circle cx="60" cy="-70" r="10"/><circle cx="70" cy="-30" r="9"/></g>
+  </g>
+  <path d="M370 1000L392 680H408L430 1000Z" fill="#ece5d6"/>
+</svg>
