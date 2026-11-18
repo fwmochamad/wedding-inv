@@ -4,4 +4,5 @@ export const GUESTS = {
   "bapak-ahmad-k7x2": "Bapak Ahmad & Keluarga",
   "rina-sahabat-9qp4": "Rina Kartika",
   "tim-kantor-m3z8": "Rekan-rekan Kantor",
+  "moyyy-moyyy-r5t9": "Moyyy Moyyy",
 };
