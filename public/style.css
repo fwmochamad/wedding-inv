@@ -61,6 +61,6 @@ input,select,textarea{font:inherit;padding:.8rem;border-radius:12px;border:1px s
 @keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
 /* Hiasan latar: daun + merpati transparan */
 #deco{position:fixed;inset:0;z-index:5;pointer-events:none;background:url(/deco.svg) center/cover no-repeat;opacity:.18;overflow:hidden}
-#doves{position:fixed;inset:0;z-index:5;pointer-events:none;overflow:hidden;opacity:.35}
-.fly{position:absolute;left:0;top:0;will-change:transform}
+#doves{position:fixed;inset:0;z-index:5;pointer-events:none;overflow:hidden;opacity:.4;perspective:700px}
+.fly{position:absolute;left:0;top:0;will-change:transform;transform-style:preserve-3d;backface-visibility:visible}
 @media (prefers-reduced-motion:reduce){#doves{display:none}}

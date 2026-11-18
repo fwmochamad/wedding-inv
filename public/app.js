@@ -67,28 +67,58 @@ quiz();
 $('#rsvp').onsubmit=e=>{e.preventDefault();const t=`Assalamu'alaikum, saya ${$('#guestName').textContent}.\nKehadiran: ${$('#rsvpAtt').value} (${$('#rsvpN').value} orang)\nUcapan: ${$('#rsvpMsg').value}`;open(`https://wa.me/${WA_NUMBER}?text=`+encodeURIComponent(t),'_blank')};
 $$('.copy').forEach(b=>b.onclick=()=>navigator.clipboard.writeText(b.dataset.c).then(()=>toast('Nomor disalin ✔')));
 
-// Merpati terbang dengan lintasan acak
+// Merpati terbang: lintasan kurva halus (diagonal, menukik, melayang, mendekat) + efek 3D kedalaman
 (function doves(){
   const box=document.getElementById('doves');if(!box||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
-  const R=(a,b)=>a+Math.random()*(b-a);
-  function fly(el){
-    const W=innerWidth,H=innerHeight,s=parseFloat(el.style.width);
-    // pilih sisi masuk & keluar acak (kiri/kanan/atas/bawah)
-    const edge=()=>{const e=Math.floor(R(0,4));return e===0?[-s-20,R(0,H)]:e===1?[W+20,R(0,H)]:e===2?[R(0,W),-s-20]:[R(0,W),H+20]};
-    let a=edge(),b=edge();while(Math.hypot(b[0]-a[0],b[1]-a[1])<W*.6)b=edge();
-    const dir=b[0]>=a[0]?1:-1,n=4,pts=[a];
-    for(let i=1;i<n;i++){const t=i/n;pts.push([a[0]+(b[0]-a[0])*t+R(-W*.15,W*.15),a[1]+(b[1]-a[1])*t+R(-H*.15,H*.15)])}
-    pts.push(b);
-    const frames=pts.map((p,i)=>{const q=pts[Math.min(i+1,n)],o=pts[Math.max(i-1,0)];
-      let ang=Math.atan2(q[1]-o[1],(q[0]-o[0])*dir)*180/Math.PI;ang=Math.max(-35,Math.min(35,ang));
-      return{transform:`translate(${p[0]}px,${p[1]}px) scaleX(${dir}) rotate(${ang}deg)`}});
-    const dist=Math.hypot(b[0]-a[0],b[1]-a[1]);
-    const anim=el.animate(frames,{duration:dist/R(40,80)*1000,easing:'linear',fill:'forwards'});
-    anim.onfinish=()=>setTimeout(()=>fly(el),R(500,4000));
+  const R=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.floor(Math.random()*a.length)];
+  // titik pada kurva Bezier kubik
+  const bz=(p,t)=>{const u=1-t;return[0,1].map(k=>u*u*u*p[0][k]+3*u*u*t*p[1][k]+3*u*t*t*p[2][k]+t*t*t*p[3][k])};
+  function route(W,H,s){
+    const L=-s-30,Rt=W+30,T=-s-30,B=H+30,type=pick(['diagonal','diagonal','swoop','glide','approach','rise']);
+    const ltr=Math.random()<.5,x0=ltr?L:Rt,x1=ltr?Rt:L;
+    let a,b,c1,c2,sc=[1,1];
+    if(type==='diagonal'){ // dari pojok atas ke sisi bawah berseberangan (atau sebaliknya)
+      const down=Math.random()<.5;a=[x0,down?R(-.1,.3)*H:R(.7,1.1)*H];b=[x1,down?R(.7,1.1)*H:R(-.1,.3)*H];
+      c1=[a[0]+(b[0]-a[0])*.33+R(-80,80),a[1]+(b[1]-a[1])*.2];c2=[a[0]+(b[0]-a[0])*.66+R(-80,80),a[1]+(b[1]-a[1])*.8];
+    }else if(type==='swoop'){ // menukik lalu naik lagi
+      a=[x0,R(.1,.35)*H];b=[x1,R(.1,.35)*H];c1=[a[0]+(b[0]-a[0])*.3,R(.75,1)*H];c2=[a[0]+(b[0]-a[0])*.7,R(.75,1)*H];
+    }else if(type==='rise'){ // dari bawah naik melengkung ke atas
+      a=[R(.1,.9)*W,B];b=[x1,R(-.1,.3)*H];c1=[a[0],R(.4,.7)*H];c2=[(a[0]+b[0])/2,R(.1,.4)*H];
+    }else if(type==='approach'){ // terbang menjauh dari layar ke arah penonton (membesar)
+      a=[x0,R(.2,.6)*H];b=[x1,R(.3,.8)*H];c1=[a[0]+(b[0]-a[0])*.35,a[1]-R(40,120)];c2=[a[0]+(b[0]-a[0])*.7,b[1]+R(40,120)];sc=[.55,1.35];
+    }else{ // melayang bergelombang landai
+      const y=R(.15,.85)*H;a=[x0,y];b=[x1,y+R(-.15,.15)*H];c1=[a[0]+(b[0]-a[0])*.33,y-R(60,140)];c2=[a[0]+(b[0]-a[0])*.66,y+R(60,140)];
+    }
+    return{p:[a,c1,c2,b],sc};
   }
-  const N=innerWidth<600?6:10;
-  for(let i=0;i<N;i++){const el=document.createElement('img');el.src='/dove.svg';el.alt='';el.className='fly';el.style.width=R(40,80)+'px';
-    el.style.transform='translate(-200px,-200px)';box.append(el);setTimeout(()=>fly(el),R(0,8000))}
+  function fly(el){
+    const W=innerWidth,H=innerHeight,z=+el.dataset.z,s=parseFloat(el.style.width);
+    const {p,sc}=route(W,H,s),N=48,pts=[];
+    for(let i=0;i<=N;i++)pts.push(bz(p,i/N));
+    let len=0;for(let i=1;i<=N;i++)len+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);
+    const dir=p[3][0]>=p[0][0]?1:-1,phase=R(0,6.28),bankAmp=R(12,28);
+    let prev=0;
+    const frames=pts.map((q,i)=>{
+      const a=pts[Math.max(i-2,0)],b=pts[Math.min(i+2,N)],t=i/N;
+      let ang=Math.atan2(b[1]-a[1],(b[0]-a[0])*dir)*180/Math.PI;ang=Math.max(-50,Math.min(50,ang));
+      ang=prev+(ang-prev)*.6;prev=ang; // haluskan perubahan sudut
+      const k=sc[0]+(sc[1]-sc[0])*t;
+      const bank=Math.sin(t*Math.PI*2+phase)*bankAmp;          // badan miring kiri-kanan (3D)
+      const tilt=Math.sin(t*Math.PI*3+phase)*10;               // sedikit mengangguk (3D)
+      return{transform:`translate3d(${q[0]}px,${q[1]}px,0) scale(${k}) scaleX(${dir}) rotate(${ang}deg) rotateX(${bank}deg) rotateY(${tilt}deg)`};
+    });
+    const speed=(28+z*60)*R(.85,1.15);
+    const anim=el.animate(frames,{duration:len/speed*1000,easing:'cubic-bezier(.35,.05,.65,.95)',fill:'forwards'});
+    anim.onfinish=()=>setTimeout(()=>fly(el),R(800,5000));
+  }
+  const N=innerWidth<600?7:12;
+  for(let i=0;i<N;i++){
+    const z=Math.random(),el=document.createElement('img');      // z: 0 = jauh, 1 = dekat
+    el.src='/dove.svg';el.alt='';el.className='fly';el.dataset.z=z;
+    el.style.width=(30+z*60)+'px';el.style.opacity=(.45+z*.55).toFixed(2);
+    el.style.filter=`blur(${((1-z)*1.6).toFixed(1)}px)`;el.style.zIndex=Math.round(z*10);
+    el.style.transform='translate3d(-300px,-300px,0)';box.append(el);setTimeout(()=>fly(el),R(0,9000));
+  }
 })();
 
 // Hujan bunga & hati yang terus berjatuhan pelan setelah undangan dibuka
