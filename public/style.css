@@ -74,3 +74,4 @@ body.zoomfx main{overflow-x:clip}
 #gardenCv{position:fixed;top:0;left:0;width:100%;height:100vh;height:100lvh;z-index:0;pointer-events:none;display:block;background:#f3efe6}
 body.lite .sec{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:0 10px 30px #6a4d7a22}
 body.lite.zoomfx .sec{background:#f3efe6eb}body.lite.zoomfx .sec.dark{background:#6a4d7af0}body.lite.zoomfx .sec.soft{background:#dcd9e1ee}
+body.lite #hud,body.lite .to{backdrop-filter:none;-webkit-backdrop-filter:none}body.lite #hud{background:#fffffff2}
