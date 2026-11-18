@@ -20,7 +20,7 @@ $('#calBtn').href=`https://calendar.google.com/calendar/render?action=TEMPLATE&t
 
 // buka undangan + musik
 const bgm=$('#bgm');
-$('#openBtn').onclick=()=>{$('#cover').classList.add('open');document.body.classList.remove('locked');bgm.play().then(()=>$('#musicBtn').classList.add('on')).catch(()=>{});petals();toast('Kumpulkan 7 💜 tersembunyi di undangan ini!')};
+$('#openBtn').onclick=()=>{$('#cover').classList.add('open');document.body.classList.remove('locked');bgm.play().then(()=>$('#musicBtn').classList.add('on')).catch(()=>{});petals();setTimeout(petalRain,4500);toast('Kumpulkan 7 💜 tersembunyi di undangan ini!')};
 $('#musicBtn').onclick=()=>{if(bgm.paused){bgm.play();$('#musicBtn').classList.add('on')}else{bgm.pause();$('#musicBtn').classList.remove('on')}};
 function petals(){for(let i=0;i<25;i++)setTimeout(()=>{const p=document.createElement('span');p.className='petal';p.textContent=['❀','✿','💜'][i%3];p.style.left=Math.random()*100+'vw';p.style.fontSize=12+Math.random()*16+'px';p.style.animationDuration=4+Math.random()*4+'s';document.body.append(p);setTimeout(()=>p.remove(),9000)},i*180)}
 
@@ -90,3 +90,11 @@ $$('.copy').forEach(b=>b.onclick=()=>navigator.clipboard.writeText(b.dataset.c).
   for(let i=0;i<N;i++){const el=document.createElement('img');el.src='/dove.svg';el.alt='';el.className='fly';el.style.width=R(40,80)+'px';
     el.style.transform='translate(-200px,-200px)';box.append(el);setTimeout(()=>fly(el),R(0,8000))}
 })();
+
+// Hujan bunga & hati yang terus berjatuhan pelan setelah undangan dibuka
+function petalRain(){if(petalRain.on||matchMedia('(prefers-reduced-motion:reduce)').matches)return;petalRain.on=1;
+  const drop=()=>{if(!document.hidden){const p=document.createElement('span');p.className='petal';p.textContent=['❀','✿','💜'][Math.floor(Math.random()*3)];
+    p.style.left=Math.random()*100+'vw';p.style.fontSize=12+Math.random()*14+'px';const d=6+Math.random()*5;p.style.animationDuration=d+'s';p.style.opacity=.75;
+    document.body.append(p);setTimeout(()=>p.remove(),d*1000+500)}
+    setTimeout(drop,innerWidth<600?900:600)};
+  drop()}
