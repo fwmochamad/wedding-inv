@@ -129,39 +129,101 @@ function petalRain(){if(petalRain.on||matchMedia('(prefers-reduced-motion:reduce
     setTimeout(drop,innerWidth<600?900:600)};
   drop()}
 
-// Efek kamera masuk ke taman: latar zoom-in bertingkat, gapura daun lewat, section muncul dari kejauhan
+// Menyusuri taman: kamera berjalan di jalan setapak 3D mengikuti scroll (digambar di canvas agar ringan),
+// section muncul dari kejauhan lalu dilewati.
 (function garden(){
-  const g=document.getElementById('garden');if(!g||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
-  document.body.classList.add('zoomfx');
-  const far=g.querySelector('.far'),mid=g.querySelector('.mid'),near=[...g.querySelectorAll('.near')],main=document.querySelector('main');
-  const secs=[...document.querySelectorAll('main .sec')];let tops=[],busy=false,sy=scrollY;
-  const measure=()=>{tops=secs.map(s=>[main.offsetTop+s.offsetTop,s.offsetHeight])};
-  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),ease=t=>t*t*(3-2*t);
-  function update(){
-    // inersia: posisi kamera mengejar posisi scroll secara halus
-    sy+=(scrollY-sy)*.14;if(Math.abs(scrollY-sy)<.3)sy=scrollY;
-    const y=sy,H=innerHeight,max=Math.max(1,document.documentElement.scrollHeight-H),gp=y/max;
-    far.style.transform=`scale(${1+gp*.9})`;
-    mid.style.transform=`translateY(${gp*8}%) scale(${1.05+gp*1.8})`;
-    // dua lapis gapura daun bergantian lewat setiap 1 layar scroll
-    near.forEach((n,i)=>{const f=((y/H)*.8+i*.5)%1;
-      n.style.transform=`scale(${.85+ease(f)*2.4})`;
-      n.style.opacity=(f<.2?f/.2:f>.65?Math.max(0,(1-f)/.35):1)*.95});
-    secs.forEach((s,i)=>{const[t,h]=tops[i],top=t-y,bot=top+h;
-      if(bot<-H||top>H*2)return;
-      const e=top>H*.25?clamp((top-H*.25)/(H*.75),0,1):0;          // masih di depan (datang)
-      const l=bot<H*.75?clamp((H*.75-bot)/(H*.75),0,1):0;          // sudah dilewati
-      const sc=1-ease(e)*.22+ease(l)*.28,op=clamp(1-e*1.15-l*1.5,0,1),bl=Math.min(4,(e+l)*5);
-      s.style.transformOrigin=`50% ${H/2-top}px`;
-      s.style.transform=`scale(${sc.toFixed(4)})`;s.style.opacity=op.toFixed(3);
-      s.style.filter=bl>.3?`blur(${bl.toFixed(1)}px)`:'';
-    });
-    if(sy!==scrollY)requestAnimationFrame(update);else busy=false;
+  const cv=document.getElementById('gardenCv');if(!cv)return;
+  const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const mobile=matchMedia('(pointer:coarse)').matches||innerWidth<700;
+  const ctx=cv.getContext('2d');
+  document.body.classList.add('zoomfx');if(mobile)document.body.classList.add('lite');
+
+  // ---- gambar (dirasterisasi sekali agar cepat digambar ulang) ----
+  const ASPECT={tree:200/300,bush:200/120,lamp:60/220,arch:300/330,tulips:100/70},img={};
+  Object.keys(ASPECT).forEach(n=>{const im=new Image();im.onload=()=>{const h=mobile?260:420,c=document.createElement('canvas');
+    c.height=h;c.width=Math.round(h*ASPECT[n]);c.getContext('2d').drawImage(im,0,0,c.width,c.height);img[n]=c;dirty=true;kick()};im.src='/garden/'+n+'.svg'});
+
+  // ---- dunia taman (berulang setiap L satuan) ----
+  let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  const L=1600,items=[];
+  for(let z=0;z<L;z+=200){items.push({n:'tree',x:-(150+rnd()*70),z:z+rnd()*40,h:210+rnd()*70});items.push({n:'tree',x:150+rnd()*70,z:z+100+rnd()*40,h:210+rnd()*70})}
+  for(let z=0;z<L;z+=100){items.push({n:'bush',x:-(80+rnd()*25),z:z+50,h:40+rnd()*12});items.push({n:'bush',x:80+rnd()*25,z:z+rnd()*30,h:40+rnd()*12})}
+  for(let z=0;z<L;z+=60){items.push({n:'tulips',x:-(52+rnd()*6),z:z+rnd()*20,h:16});items.push({n:'tulips',x:52+rnd()*6,z:z+30+rnd()*20,h:16})}
+  for(let z=200;z<L;z+=400){items.push({n:'lamp',x:-62,z,h:110});items.push({n:'lamp',x:62,z,h:110})}
+  items.push({n:'arch',x:0,z:0,h:175});items.push({n:'arch',x:0,z:800,h:175});
+
+  let W=0,H=0,dpr=1,sy=scrollY,running=false,dirty=true;
+  const CAMH=38,DMAX=2600,DMIN=12,SPEED=mobile?1.5:1.3;
+  function resize(){
+    const w=cv.clientWidth,h=cv.clientHeight;if(w===W&&h===H)return;
+    W=w;H=h;dpr=Math.min(devicePixelRatio||1,mobile?1.5:2);cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);dirty=true;measure();
   }
-  const req=()=>{if(!busy){busy=true;requestAnimationFrame(update)}};
-  measure();update();
-  addEventListener('scroll',req,{passive:true});
-  addEventListener('resize',()=>{measure();req()});
-  addEventListener('load',()=>{measure();req()});
-  setTimeout(()=>{measure();req()},1500);
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),ease=t=>t*t*(3-2*t);
+
+  function drawGarden(camZ){
+    const c=ctx;c.setTransform(dpr,0,0,dpr,0,0);
+    const cx=W/2,hy=H*.42,f=Math.min(W*1.15,H*.95);
+    // langit
+    let g=c.createLinearGradient(0,0,0,hy);g.addColorStop(0,'#efe4f6');g.addColorStop(1,'#f8f3ec');c.fillStyle=g;c.fillRect(0,0,W,hy+2);
+    g=c.createRadialGradient(cx,hy-H*.06,0,cx,hy-H*.06,H*.35);g.addColorStop(0,'rgba(255,255,255,.95)');g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.fillRect(0,0,W,hy+2);
+    // bukit jauh (sedikit bergeser agar terasa hidup)
+    const sh=Math.sin(camZ/900)*W*.01;
+    c.fillStyle='#dbe4cc';c.beginPath();c.moveTo(0,hy);for(let x=0;x<=W;x+=W/8)c.lineTo(x,hy-12-Math.sin(x/W*6+1+sh/50)*10);c.lineTo(W,hy+2);c.lineTo(0,hy+2);c.fill();
+    c.fillStyle='#cfdbbd';c.beginPath();c.moveTo(0,hy);for(let x=0;x<=W;x+=W/10)c.lineTo(x,hy-4-Math.sin(x/W*9+2)*6);c.lineTo(W,hy+2);c.lineTo(0,hy+2);c.fill();
+    // tanah
+    g=c.createLinearGradient(0,hy,0,H);g.addColorStop(0,'#cfdcbd');g.addColorStop(1,'#a9c191');c.fillStyle=g;c.fillRect(0,hy,W,H-hy);
+    // jalan setapak
+    const dB=CAMH*f/(H-hy),PW=42;
+    g=c.createLinearGradient(0,hy,0,H);g.addColorStop(0,'#efe8da');g.addColorStop(1,'#e6dac4');c.fillStyle=g;
+    c.beginPath();c.moveTo(cx-PW*f/DMAX,hy+CAMH*f/DMAX);c.lineTo(cx+PW*f/DMAX,hy+CAMH*f/DMAX);c.lineTo(cx+PW*f/dB,H);c.lineTo(cx-PW*f/dB,H);c.fill();
+    // kumpulkan objek yang terlihat
+    const vis=[];
+    for(const it of items){let d=((it.z-camZ)%L+L)%L;for(;d<DMAX;d+=L)if(d>DMIN)vis.push([d,it])}
+    const STEP=48,off=((-camZ)%STEP+STEP)%STEP;for(let d=off;d<DMAX;d+=STEP)if(d>DMIN)vis.push([d,null]);
+    vis.sort((a,b)=>b[0]-a[0]);
+    for(const[d,it]of vis){
+      const s=f/d,gy=hy+CAMH*s,fog=clamp((DMAX-d)/700,0,1);
+      if(!it){ // batu pijakan
+        c.globalAlpha=fog*clamp((d-DMIN)/30,0,1);c.fillStyle='#d6cbb8';c.beginPath();c.ellipse(cx,gy,15*s,5*s,0,0,6.283);c.fill();
+        c.fillStyle='#e9e1d2';c.beginPath();c.ellipse(cx,gy-1.2*s,13*s,3.8*s,0,0,6.283);c.fill();continue}
+      const im=img[it.n];if(!im)continue;
+      const hh=it.h*s,ww=hh*ASPECT[it.n],x=cx+it.x*s;
+      if(x+ww/2<-50||x-ww/2>W+50)continue;
+      const near=it.n==='arch'?clamp((d-DMIN)/(mobile?55:45),0,1):clamp((d-DMIN)/35,0,1);
+      c.globalAlpha=fog*near;c.drawImage(im,x-ww/2,gy-hh,ww,hh);
+    }
+    c.globalAlpha=1;
+    // kabut lembut di cakrawala
+    g=c.createLinearGradient(0,hy-H*.05,0,hy+H*.08);g.addColorStop(0,'rgba(248,243,236,0)');g.addColorStop(.5,'rgba(248,243,236,.55)');g.addColorStop(1,'rgba(248,243,236,0)');
+    c.fillStyle=g;c.fillRect(0,hy-H*.05,W,H*.13);
+  }
+
+  // ---- transisi section ----
+  const main=document.querySelector('main'),secs=[...document.querySelectorAll('main .sec')];let tops=[];
+  function measure(){tops=secs.map(s=>[main.offsetTop+s.offsetTop,s.offsetHeight])}
+  function sections(y){
+    if(reduce)return;
+    const k=mobile?.55:1;
+    secs.forEach((s,i)=>{const[t,h]=tops[i]||[0,0],top=t-y,bot=top+h;
+      if(bot<-H||top>H*2)return;
+      const e=top>H*.3?clamp((top-H*.3)/(H*.7),0,1):0,l=bot<H*.7?clamp((H*.7-bot)/(H*.7),0,1):0;
+      const sc=1-ease(e)*.2*k+ease(l)*.25*k,op=clamp(1-e*1.1-l*1.4,0,1);
+      s.style.transformOrigin=`50% ${(H/2-top).toFixed(0)}px`;
+      s.style.transform=`translate3d(0,0,0) scale(${sc.toFixed(4)})`;s.style.opacity=op.toFixed(3);
+      if(!mobile){const bl=Math.min(3,(e+l)*4);s.style.filter=bl>.3?`blur(${bl.toFixed(1)}px)`:''}
+    });
+  }
+
+  function frame(){
+    resize();
+    const target=scrollY;sy+=(target-sy)*(mobile?.22:.12);if(Math.abs(target-sy)<.4)sy=target;
+    drawGarden(reduce?0:sy*SPEED);sections(sy);dirty=false;
+    if(sy!==target)requestAnimationFrame(frame);else running=false;
+  }
+  function kick(){if(!running){running=true;requestAnimationFrame(frame)}}
+  addEventListener('scroll',kick,{passive:true});
+  addEventListener('resize',()=>{measure();kick()});
+  addEventListener('load',()=>{measure();kick()});
+  setTimeout(()=>{measure();kick()},1500);
+  measure();kick();
 })();

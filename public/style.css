@@ -65,14 +65,12 @@ input,select,textarea{font:inherit;padding:.8rem;border-radius:12px;border:1px s
 .fly{position:absolute;left:0;top:0;will-change:transform;transform-style:preserve-3d;backface-visibility:visible}
 @media (prefers-reduced-motion:reduce){#doves{display:none}}
 /* Efek "masuk ke taman" saat scroll */
-#garden{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:var(--cream)}
-.g{position:absolute;inset:-2%;background:center/cover no-repeat;will-change:transform,opacity;transform-origin:50% 60%}
-.g.far{background-image:url(/garden-far.svg)}
-.g.mid{background-image:url(/garden-mid.svg);background-position:center bottom}
-.g.near{background-image:url(/garden-near.svg);opacity:0}
 main{position:relative;z-index:1}
 body.zoomfx .sec{opacity:1;transition:none;will-change:transform,opacity;width:calc(100% - 24px);max-width:900px;margin:10vh auto;border-radius:28px;background:#f3efe6db;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);box-shadow:0 20px 60px #6a4d7a26}
 body.zoomfx .sec.dark{background:#6a4d7ae6}
 body.zoomfx .sec.soft{background:#dcd9e1e0}
 body.zoomfx main{padding:8vh 0 14vh}
 body.zoomfx main{overflow-x:clip}
+#gardenCv{position:fixed;top:0;left:0;width:100%;height:100vh;height:100lvh;z-index:0;pointer-events:none;display:block;background:#f3efe6}
+body.lite .sec{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:0 10px 30px #6a4d7a22}
+body.lite.zoomfx .sec{background:#f3efe6eb}body.lite.zoomfx .sec.dark{background:#6a4d7af0}body.lite.zoomfx .sec.soft{background:#dcd9e1ee}
